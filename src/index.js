@@ -13,6 +13,7 @@ import config from './config';
 
 // style + assets
 import './assets/scss/style.scss';
+import './assets/scss/extend.scss';
 
 //-----------------------|| REACT DOM RENDER  ||-----------------------//
 
