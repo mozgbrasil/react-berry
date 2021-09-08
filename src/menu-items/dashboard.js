@@ -11,12 +11,12 @@ const icons = {
 
 export const dashboard = {
     id: 'dashboard',
-    title: 'Dashboard',
+    title: 'Painel',
     type: 'group',
     children: [
         {
             id: 'default',
-            title: 'Dashboard',
+            title: 'Painel',
             type: 'item',
             url: '/dashboard/default',
             icon: icons['IconDashboard'],

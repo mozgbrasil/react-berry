@@ -1,4 +1,152 @@
-import { useRef, useState, useEffect } from 'react';
+// #
+// #
+// #
+// #
+// https://material-ui.com/pt/components/dialogs/
+// import React from 'react';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import SaveIcon from '@material-ui/icons/Save';
+import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
+
+export function AlertDialog(props) {
+    const { kind, ...other } = props;
+    const className = kind === 'primary' ? 'PrimaryButton' : 'SecondaryButton';
+
+    const [open, setOpen] = React.useState(false);
+    const [key, setKey] = React.useState(false);
+
+    useEffect(() => {
+        setKey(props.record.key);
+    }, []);
+
+    const handleClickOpen = (event) => {
+        setOpen(true);
+        console.log('handleClickOpen: ', event);
+    };
+
+    const handleClose = (event) => {
+        setOpen(false);
+        console.log('handleClose: ', key);
+    };
+
+    const handleOk = async (event) => {
+        setOpen(false);
+        console.log('handleOk: ', key);
+        await deleteUser(key);
+        handleClose();
+        // toast.warning('User deleted successfully!');
+    };
+
+    const deleteUser = async (key) => {
+        console.log('deleteUser: ', key);
+        let url = process.env.REACT_APP_API_URL + '/users/' + key;
+        const results = await fetch(url, { method: 'DELETE' })
+            .then((res) => {
+                var results = res;
+                console.log('results: ', results);
+                return results;
+            })
+            .then((res) => {
+                var results = res.results;
+                console.log('results: ', results);
+                return results;
+            })
+            .catch((e) => {
+                console.log('err: ', e.message);
+            });
+
+        //  setData(results);
+    };
+
+    return (
+        <div>
+            <Button variant="outlined" color="primary" onClick={() => handleClickOpen(props.record.key)} className={className} {...other}>
+                {props.children}
+            </Button>
+            <Dialog open={open} onClose={handleClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
+                <DialogTitle id="alert-dialog-title">{'Tem certeza de que quer excluir este registro ?'}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">Essa ação não é reversivel</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Não
+                    </Button>
+                    <Button onClick={handleOk} color="primary" autoFocus>
+                        Sim
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </div>
+    );
+}
+// #
+// #
+// #
+// #
+
+// https://material-ui.com/pt/components/snackbars/
+// import React from 'react';
+// import Button from '@material-ui/core/Button';
+import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+
+export function SimpleSnackbar(props) {
+    const { ...other } = props;
+
+    const [open, setOpen] = React.useState(false);
+
+    const handleClick = () => {
+        setOpen(true);
+    };
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpen(false);
+    };
+
+    return (
+        <div>
+            <Button onClick={handleClick}>Open simple snackbar {props.children}</Button>
+            <Snackbar
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left'
+                }}
+                open={open}
+                autoHideDuration={6000}
+                onClose={handleClose}
+                message="Note archived"
+                action={
+                    <React.Fragment>
+                        <Button color="secondary" size="small" onClick={handleClose}>
+                            UNDO
+                        </Button>
+                        <IconButton size="small" aria-label="close" color="inherit" onClick={handleClose}>
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </React.Fragment>
+                }
+            />
+        </div>
+    );
+}
+
+// #
+// #
+// #
+// #
+
+import React, { useRef, useState, useEffect } from 'react';
 
 // material-ui
 import { Typography } from '@material-ui/core';
@@ -8,7 +156,7 @@ import MainCard from '../../ui-component/cards/MainCard';
 
 //
 import 'antd/dist/antd.css'; // or 'antd/dist/antd.less'
-import { Table, Space, Input } from 'antd'; // , Tag
+import { Table, Space, Tag, Input, Switch } from 'antd';
 import { SettingFilled as IconSettingFilled } from '@ant-design/icons';
 
 import SchemaForm from 'antd-schema-form'; // getValueFromObject // The value of the form obtained from the form, formatted into an object // getObjectFromValue, // Object formatted into the value required by the form // getKeysFromObject, // Get all the keys under schema.json
@@ -19,19 +167,38 @@ const columns = [
         title: 'Name',
         dataIndex: 'name',
         key: 'name',
+        // fixed: 'left',
+        render: (text, record) => {
+            if (typeof text != 'string') {
+                const arr = Object.values(record.name);
+                return (
+                    <span>
+                        {arr.map((tag) => {
+                            let color = tag.length > 5 ? 'geekblue' : 'green';
+                            if (tag === 'loser') {
+                                color = 'volcano';
+                            }
+                            return (
+                                <Tag color={color} key={tag}>
+                                    {tag.toUpperCase()}
+                                </Tag>
+                            );
+                        })}
+                    </span>
+                );
+            }
+        }
+    },
+    {
+        title: 'Picture',
+        dataIndex: 'picture',
+        key: 'picture',
         render: (text, record) => (
             <span>
-                {/* {record.map((tag) => {
-                    let color = tag.length > 5 ? 'geekblue' : 'green';
-                    if (tag === 'loser') {
-                        color = 'volcano';
-                    }
-                    return (
-                        <Tag color={color} key={tag}>
-                            {tag.toUpperCase()}
-                        </Tag>
-                    );
-                })} */}
+                <img src={record.picture.thumbnail} />
+                {/* <Tag color={color} key={record.key}>
+                    {text.toUpperCase()}
+                </Tag> */}
             </span>
         )
     },
@@ -39,18 +206,14 @@ const columns = [
         title: 'Gender',
         dataIndex: 'gender',
         key: 'gender',
-        render: (text, record) => (
-            <a href="https://ant.design/components/table/">
-                {text} {record.gender}
-            </a>
-        )
+        render: (text, record) => <Tag size="middle">{record.gender}</Tag>
     },
-    {
-        title: 'e-mail',
-        dataIndex: 'email',
-        key: 'email',
-        render: (text, record) => <Space size="middle">{record.email}</Space>
-    },
+    // {
+    //     title: 'e-mail',
+    //     dataIndex: 'email',
+    //     key: 'email',
+    //     render: (text, record) => <Tag size="middle">{record.email}</Tag>
+    // },
     {
         title: 'Phone',
         dataIndex: 'phone',
@@ -66,33 +229,111 @@ const columns = [
         dataIndex: 'nat',
         key: 'nat'
     },
+    // {
+    //     title: 'Location',
+    //     dataIndex: 'location',
+    //     key: 'location',
+    //     render: (text, record) => (
+    //         <span>
+    //             <Space size="middle">???</Space>
+    //             {/* <Tag color={color} key={record.key}>
+    //                 {text.toUpperCase()}
+    //             </Tag> */}
+    //         </span>
+    //     )
+    // },
     {
-        title: 'Tags',
-        dataIndex: 'tags',
-        key: 'tags',
-        render: (tags) => (
-            <span>
-                {/* {tags.map((tag) => {
-                    let color = tag.length > 5 ? 'geekblue' : 'green';
-                    if (tag === 'loser') {
-                        color = 'volcano';
-                    }
-                    return (
-                        <Tag color={color} key={tag}>
-                            {tag.toUpperCase()}
-                        </Tag>
-                    );
-                })} */}
-            </span>
-        )
+        title: 'Login',
+        dataIndex: 'login',
+        key: 'login',
+        render: (text, record) => {
+            if (typeof text != 'string') {
+                const arr = Object.values(record.login);
+                return (
+                    <span>
+                        {(() => {
+                            // console.log('IIFE - render');
+                            let color = 'green';
+                            return (
+                                <Tag color={color} key="1">
+                                    {record.login.username}
+                                </Tag>
+                            );
+                        })()}
+                    </span>
+                );
+            }
+        }
+    },
+    {
+        title: 'Dob',
+        dataIndex: 'dob',
+        key: 'dob',
+        render: (text, record) => {
+            if (typeof text != 'string') {
+                const arr = Object.values(record.dob);
+                return (
+                    <span>
+                        {arr.map((tag) => {
+                            let color = tag.length > 5 ? 'geekblue' : 'green';
+                            if (tag === 'loser') {
+                                color = 'volcano';
+                            }
+                            return (
+                                <Tag color={color} key={tag}>
+                                    {tag}
+                                </Tag>
+                            );
+                        })}
+                    </span>
+                );
+            }
+        }
+    },
+    {
+        title: 'Registered',
+        dataIndex: 'registered',
+        key: 'registered',
+        render: (text, record) => {
+            if (typeof text != 'string') {
+                const arr = Object.values(record.registered);
+                return (
+                    <span>
+                        {arr.map((tag) => {
+                            let color = tag.length > 5 ? 'geekblue' : 'green';
+                            if (tag === 'loser') {
+                                color = 'volcano';
+                            }
+                            return (
+                                <Tag color={color} key={tag}>
+                                    {tag}
+                                </Tag>
+                            );
+                        })}
+                    </span>
+                );
+            }
+        }
     },
     {
         title: 'Action',
         key: 'action',
+        fixed: 'right',
         render: (text, record) => (
             <Space size="middle">
-                <a href="https://ant.design/components/table/">Editar</a>
-                <a href="https://ant.design/components/table/">Excluir</a>
+                <Button
+                    variant="contained"
+                    color={'primary'}
+                    disableElevation
+                    style={{ width: 'auto', padding: '1vh', marginLeft: '3vh', color: '#7ffff9', background: '#21086d' }}
+                    endIcon={<SaveIcon />}
+                    onClick={() => handleEdit(record.key)}
+                >
+                    Editar
+                </Button>
+                <AlertDialog kind="primary" record={record}>
+                    Delete
+                </AlertDialog>
             </Space>
         )
     }
@@ -300,12 +541,26 @@ const customTableRender = {
     }
 };
 
+//
+
+const handleEdit = async (id) => {
+    console.log('handleEdit: ', id);
+    window.location.href = '#' + id;
+    window.location.reload(true);
+};
+
 //==============================|| App PAGE ||==============================//
+
+//
 
 const App = () => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
+
+    const [fixedTop, setFixedTop] = React.useState(false);
+
+    console.log('window.location.hash: ', window.location.hash);
 
     useEffect(() => {
         const getPacients = async () => {
@@ -314,22 +569,50 @@ const App = () => {
             //
             try {
                 setIsLoading(true);
-                let url = process.env.REACT_APP_API + '/users?page=1&pageSize=3';
-                const response = await fetch(url);
-                const results = await response.json();
-                console.log('results: ', results);
+                let url = process.env.REACT_APP_API_URL + '/users?page=1&pageSize=50';
+                // const response = await fetch(url);
+                // const res = await response.json();
+                // const results = res.results;
+                const results = await fetch(url)
+                    .then(async (res) => {
+                        var results = await res.json();
+                        console.log('results: ', results);
+                        return results;
+                    })
+                    .then((res) => {
+                        var results = res.results;
+
+                        // Fix: Warning: Each child in a list should have a unique "key" prop.
+                        var results = results.map((obj) => {
+                            obj.key = obj._id; // on object create new key name. Assign old value to this
+                            delete obj._id; //delete object with old key name
+                            return obj;
+                        });
+
+                        // Fix: obj to arr
+                        var results = results.map((obj) => {
+                            // console.log(obj);
+                            return obj;
+                        });
+
+                        // console.log(results);
+
+                        return results;
+                    })
+                    .catch((e) => {
+                        setIsError(e.message);
+                    });
+
                 setData(results);
             } catch (e) {
                 setIsLoading(false);
-                setIsError(false);
+                setIsError(e.message);
             } finally {
                 setIsLoading(false);
             }
         };
         getPacients();
     }, []);
-
-    //
 
     const formRef = useRef();
 
@@ -343,15 +626,15 @@ const App = () => {
 
     // cancel
     function handleCancelClick() {
-        /* ===== */
+        console.log('handleCancelClick');
     }
 
     if (isLoading) {
-        return <>isLoading</>;
+        return <>isLoading: {isLoading}</>;
     }
 
     if (isError) {
-        return <>isError</>;
+        return <>isError: {isError}</>;
     }
 
     return (
@@ -362,12 +645,23 @@ const App = () => {
                         https://github.com/mozgbrasil/node-labs/blob/develop/README_findup.md#findup
                     </a>
                 </Typography>
+                <SimpleSnackbar />
             </MainCard>
-            <MainCard title="DataGrid">
-                {/* display books from the API */}
+            <MainCard title="Grade de Dados">
                 {data && (
                     <div className="books">
-                        <Table columns={columns} dataSource={data} pagination={{ position: ['topRight', 'bottomRight'] }} />
+                        <Table
+                            columns={columns}
+                            dataSource={data}
+                            pagination={{
+                                pageSize: 50,
+                                defaultPageSize: 50,
+                                showSizeChanger: false,
+                                pageSizeOptions: ['10', '20', '30'],
+                                position: ['topRight', 'bottomRight']
+                            }}
+                            scroll={{ y: 240 }}
+                        />
                         {/* loop over the books */}
                         {/* {pacients.map((item, index) => (
                             <div key={index}>
@@ -377,6 +671,38 @@ const App = () => {
                     </div>
                 )}
             </MainCard>
+            {/* <MainCard title="DataGrid">
+                {data && (
+                    <div className="books">
+                        <Table
+                            columns={columns}
+                            dataSource={data}
+                            scroll={{ x: 1500 }}
+                            summary={(pageData) => (
+                                <Table.Summary fixed={fixedTop ? 'top' : 'bottom'}>
+                                    <Table.Summary.Row>
+                                        <Table.Summary.Cell index={0} colSpan={2}>
+                                            <Switch
+                                                checkedChildren="Fixed Top"
+                                                unCheckedChildren="Fixed Top"
+                                                checked={fixedTop}
+                                                onChange={() => {
+                                                    setFixedTop(!fixedTop);
+                                                }}
+                                            />
+                                        </Table.Summary.Cell>
+                                        <Table.Summary.Cell index={2} colSpan={8}>
+                                            Scroll Context
+                                        </Table.Summary.Cell>
+                                        <Table.Summary.Cell index={10}>Fix Right</Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                </Table.Summary>
+                            )}
+                            sticky
+                        />
+                    </div>
+                )}
+            </MainCard> */}
             <MainCard title="Formulário">
                 <SchemaForm
                     ref={formRef}
