@@ -3,42 +3,60 @@
 // #
 // #
 
+const component_relations = false;
+
+// #
+// #
+// #
+// #
+
 // We need to wrap component in `forwardRef` in order to gain
 // access to the ref object that is assigned using the `ref` prop.
 // This ref is passed as the second parameter to the function component.
-const About = forwardRef((props, ref) => {
+/* In the functional component, a second argument is passed called ref, which will have access to the refs being forwarded from the parent */
+const CompoentAbout = forwardRef((props, ref) => {
     const [state, setState] = useState(0);
 
     // The component instance will be extended
     // with whatever you return from the callback passed
     // as the second argument
     useImperativeHandle(ref, () => ({
-        Hello
+        HelloChild,
+        MyEventHelloParent
     }));
 
     const [data, setData] = useState([]);
 
-    useEffect(() => {}, []);
+    useEffect(() => {
+        // getPacients();
+    }, []);
 
-    const Hello = () => {
-        console.log('About->Hello');
+    const HelloChild = (props) => {
+        console.log('About->HelloChild', props);
     };
 
-    const trigger_Parent = () => {
-        console.log('About->trigger_Parent');
-        // childRef_AntdSchemaTable.current.getPacients();
+    const MyEventHelloParent = (props, ref) => {
+        console.log('About->MyEventHelloParent', props);
+        console.log('About->MyEventHelloParent', ref);
+        props.MyEventHelloParent();
     };
+
+    const useRef_button = useRef();
 
     return (
-        <>
+        <div ref={ref}>
+            <span>{props.children}</span>
+            {component_relations && (
+                <button ref={useRef_button} onClick={() => MyEventHelloParent(props, ref)}>
+                    trigger "Hello()" from Child 2 Parent
+                </button>
+            )}
             <Typography variant="body2">
                 <a href="https://github.com/mozgbrasil/node-labs/blob/develop/views/tests/findup/scope/README_findup.md#findup">
                     https://github.com/mozgbrasil/node-labs/blob/develop/views/tests/findup/scope/README_findup.md#findup
                 </a>
             </Typography>
-            <button onClick={() => trigger_Parent()}>trigger "Hello()" from Child 2 Parent</button>
-            {/* <SimpleSnackbar /> */}
-        </>
+        </div>
     );
 });
 
@@ -80,13 +98,13 @@ export function AlertDialog(props) {
         console.log('handleClose: ', key);
     };
 
-    const handleOk = async (event) => {
+    const handleOk = async (props) => {
         setOpen(false);
-        console.log('handleOk: ', key);
+        console.log('handleOk: ', props);
+        console.log('handleOk key: ', key);
         await deleteUser(key);
         handleClose();
-        // window.location.reload(true); // @TODO: parent datagrid request load
-        // toast.warning('User deleted successfully!');
+        props.MyEventAntdSchemaTable();
     };
 
     const deleteUser = async (key) => {
@@ -104,15 +122,15 @@ export function AlertDialog(props) {
                 return results;
             })
             .then((res) => {
-                var results = res.results;
-                console.log('deleteUser: ', results);
+                var results = res;
+                // console.log('deleteUser: ', results);
                 return results;
             })
             .catch((e) => {
                 console.log('err: ', e.message);
             });
 
-        console.log('deleteUser: ', results);
+        // console.log('deleteUser: ', results);
 
         //  setData(results);
     };
@@ -131,7 +149,7 @@ export function AlertDialog(props) {
                     <Button onClick={handleClose} color="primary">
                         Não
                     </Button>
-                    <Button onClick={handleOk} color="primary" autoFocus>
+                    <Button onClick={() => handleOk(props)} color="primary" autoFocus>
                         Sim
                     </Button>
                 </DialogActions>
@@ -205,20 +223,21 @@ import 'antd/dist/antd.css'; // or 'antd/dist/antd.less'
 import { Table, Space, Tag, Input, Switch } from 'antd';
 import { SettingFilled as IconSettingFilled } from '@ant-design/icons';
 
-// export function AntdSchemaTable(props) {
-//   const { ...other } = props;
-
 // We need to wrap component in `forwardRef` in order to gain
 // access to the ref object that is assigned using the `ref` prop.
 // This ref is passed as the second parameter to the function component.
-const AntdSchemaTable = forwardRef((props, ref) => {
+const CompoentAntdSchemaTable = forwardRef((props, ref) => {
     const [state, setState] = useState(0);
 
     // The component instance will be extended
     // with whatever you return from the callback passed
     // as the second argument
     useImperativeHandle(ref, () => ({
-        getPacients
+        getPacients,
+        HelloChild,
+        MyEventHelloParent,
+        MyEventAntdSchemaTable,
+        MyEventAntdSchemaForm
     }));
 
     const [data, setData] = useState([]);
@@ -228,6 +247,10 @@ const AntdSchemaTable = forwardRef((props, ref) => {
     useEffect(() => {
         getPacients();
     }, []);
+
+    const HelloChild = (props) => {
+        console.log('AntdSchemaTable->HelloChild', props);
+    };
 
     const getPacients = async () => {
         //
@@ -274,7 +297,7 @@ const AntdSchemaTable = forwardRef((props, ref) => {
                     setIsError(e.message);
                 });
 
-            console.log('getPacients: ', results);
+            // console.log('getPacients: ', results);
 
             setData(results);
         } catch (e) {
@@ -450,11 +473,14 @@ const AntdSchemaTable = forwardRef((props, ref) => {
                         disableElevation
                         style={{ width: 'auto', padding: '1vh', marginLeft: '3vh', color: '#7ffff9', background: '#21086d' }}
                         endIcon={<SaveIcon />}
-                        onClick={() => handleEdit(record.key)}
+                        onClick={() => handleEdit(props, record.key)}
                     >
                         Editar
                     </Button>
-                    <AlertDialog kind="primary" record={record}>
+                    {/* @TODO - FIX */}
+                    {/* {...props} */}
+                    {/* Warning: React does not recognize the `MyEventHelloParent` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `hello_parent` instead. If you accidentally passed it from a parent component, remove it from the DOM element. */}
+                    <AlertDialog kind="primary" record={record} {...props}>
                         Delete
                     </AlertDialog>
                 </Space>
@@ -464,15 +490,41 @@ const AntdSchemaTable = forwardRef((props, ref) => {
 
     //
 
-    const handleEdit = async (id) => {
-        console.log('handleEdit: ', id);
-        // @TODO - Dispatch Main
+    const handleEdit = async (props, id) => {
+        console.log('handleEdit: ', props);
+        console.log('handleEdit id: ', id);
         window.location.href = '#' + id;
-        window.location.reload(true);
+        props.MyEventAntdSchemaForm();
     };
+
+    const MyEventHelloParent = (props, ref) => {
+        console.log('AntdSchemaTable->MyEventHelloParent', props);
+        console.log('AntdSchemaTable->MyEventHelloParent', ref);
+        props.MyEventHelloParent();
+    };
+
+    const MyEventAntdSchemaTable = (props, ref) => {
+        console.log('AntdSchemaTable->MyEventAntdSchemaTable', props);
+        console.log('AntdSchemaTable->MyEventAntdSchemaTable', ref);
+        props.MyEventAntdSchemaTable();
+    };
+
+    const MyEventAntdSchemaForm = (props, ref) => {
+        console.log('AntdSchemaTable->MyEventHelloParent', props);
+        console.log('AntdSchemaTable->MyEventHelloParent', ref);
+        props.MyEventAntdSchemaForm();
+    };
+
+    const useRef_button = useRef();
 
     return (
         <>
+            <span>{props.children}</span>
+            {component_relations && (
+                <button ref={useRef_button} onClick={() => MyEventHelloParent(props, ref)}>
+                    trigger "Hello()" from Child 2 Parent
+                </button>
+            )}
             {data && (
                 <div className="books">
                     <Table
@@ -539,9 +591,42 @@ const AntdSchemaTable = forwardRef((props, ref) => {
 import SchemaForm from 'antd-schema-form'; // getValueFromObject // The value of the form obtained from the form, formatted into an object // getObjectFromValue, // Object formatted into the value required by the form // getKeysFromObject, // Get all the keys under schema.json
 import 'antd-schema-form/style/antd-schema-form.css'; //
 
-export function AntdSchemaForm(props) {
-    const { ...other } = props;
+// We need to wrap component in `forwardRef` in order to gain
+// access to the ref object that is assigned using the `ref` prop.
+// This ref is passed as the second parameter to the function component.
+/* In the functional component, a second argument is passed called ref, which will have access to the refs being forwarded from the parent */
+const CompoentAntdSchemaForm = forwardRef((props, ref) => {
+    const [state, setState] = useState(0);
 
+    // The component instance will be extended
+    // with whatever you return from the callback passed
+    // as the second argument
+    useImperativeHandle(ref, () => ({
+        HelloChild,
+        MyEventHelloParent
+    }));
+
+    const [data, setData] = useState([]);
+    const [nprops, setNprops] = useState([]);
+
+    useEffect(() => {
+        // getPacients();
+
+        setNprops(props);
+    }, []);
+
+    const HelloChild = (props) => {
+        console.log('AntdSchemaForm->HelloChild', props);
+    };
+
+    const MyEventHelloParent = (props, ref) => {
+        console.log('AntdSchemaForm->MyEventHelloParent->nprops', nprops);
+        console.log('AntdSchemaForm->MyEventHelloParent->props', props);
+        console.log('AntdSchemaForm->MyEventHelloParent->ref', ref);
+        props.MyEventHelloParent();
+    };
+
+    const useRef_button = useRef();
     const formRef = useRef();
 
     // form json schema
@@ -846,9 +931,10 @@ export function AntdSchemaForm(props) {
 
     const handleOkSubmit = async (form, val, keys) => {
         console.log('handleOkSubmit');
-        // console.log('form: ', form);
-        // console.log('val: ', val);
-        // console.log('keys: ', keys);
+        console.log('AntdSchemaForm->handleOkSubmit->nprops', nprops);
+        // console.log('handleOkSubmit->form: ', form);
+        // console.log('handleOkSubmit->val: ', val);
+        // console.log('handleOkSubmit->keys: ', keys);
         var collection = val.$root;
         console.log('collection: ', collection);
         if (process.env.NODE_ENV == 'development') {
@@ -882,18 +968,25 @@ export function AntdSchemaForm(props) {
             })
             .then((res) => {
                 var results = res;
-                console.log('handleOkSubmit: ', results);
+                // console.log('handleOkSubmit: ', results);
                 return results;
             })
             .catch((e) => {
                 console.log('err: ', e.message);
             });
 
-        console.log('handleOkSubmit: ', results);
+        // console.log('handleOkSubmit: ', results);
+
+        window.location.hash = '';
+        nprops.MyEventAntdSchemaTable();
+        // handleCancelClick(); @ TODO
     };
 
-    const handleCancelClick = () => {
+    const handleCancelClick = (form, keys) => {
         console.log('handleCancelClick');
+        console.log('handleCancelClick->form: ', form);
+        console.log('handleCancelClick->keys: ', keys);
+        form.resetFields();
     };
 
     // 自定义组件
@@ -914,18 +1007,26 @@ export function AntdSchemaForm(props) {
     };
 
     return (
-        <SchemaForm
-            ref={formRef}
-            json={json}
-            value={value}
-            customComponent={customComponent}
-            customTableRender={customTableRender}
-            okText="Enviar"
-            onOk={handleOkSubmit}
-            onCancel={handleCancelClick}
-        />
+        <>
+            <span>{props.children}</span>
+            {component_relations && (
+                <button ref={useRef_button} onClick={() => MyEventHelloParent(props, ref)}>
+                    trigger "Hello()" from Child 2 Parent
+                </button>
+            )}
+            <SchemaForm
+                ref={formRef}
+                json={json}
+                value={value}
+                customComponent={customComponent}
+                customTableRender={customTableRender}
+                okText="Enviar"
+                onOk={handleOkSubmit}
+                onCancel={handleCancelClick}
+            />
+        </>
     );
-}
+});
 
 // #
 // #
@@ -942,7 +1043,7 @@ import MainCard from '../../ui-component/cards/MainCard';
 
 //==============================|| App PAGE ||==============================//
 
-const App = () => {
+const CompoentApp = (props) => {
     // console.log('process.env: ', process.env);
 
     const [data, setData] = useState([]);
@@ -950,74 +1051,120 @@ const App = () => {
     const [isError, setIsError] = useState(false);
 
     useEffect(() => {
-        const getPacient = async () => {
-            try {
-                setIsLoading(true);
-                if (process.env.NODE_ENV == 'development') {
-                    var API_URL = process.env.REACT_APP_API_URL_LOCAL;
-                } else {
-                    var API_URL = process.env.REACT_APP_API_URL_WEB;
-                }
-                let url = API_URL + '/users/' + window.location.hash.substring(1);
-                const results = await fetch(url)
-                    .then(async (res) => {
-                        var results = await res.json();
-                        console.log('getPacient: ', results);
-                        return results;
-                    })
-                    .then((res) => {
-                        var results = res;
-                        return results;
-                    })
-                    .catch((e) => {
-                        setIsError(e.message);
-                    });
-                console.log('getPacient: ', results);
-                setData(results);
-            } catch (e) {
-                setIsLoading(false);
-                setIsError(e.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         if (window.location.hash != '') {
             getPacient();
         }
     }, []);
 
-    const Hello = () => {
-        console.log('App->Hello');
+    const getPacient = async () => {
+        try {
+            setIsLoading(true);
+            if (process.env.NODE_ENV == 'development') {
+                var API_URL = process.env.REACT_APP_API_URL_LOCAL;
+            } else {
+                var API_URL = process.env.REACT_APP_API_URL_WEB;
+            }
+            let url = API_URL + '/users/' + window.location.hash.substring(1);
+            const results = await fetch(url)
+                .then(async (res) => {
+                    var results = await res.json();
+                    console.log('getPacient: ', results);
+                    return results;
+                })
+                .then((res) => {
+                    var results = res;
+                    return results;
+                })
+                .catch((e) => {
+                    setIsError(e.message);
+                });
+            console.log('getPacient: ', results);
+            setData(results);
+        } catch (e) {
+            setIsLoading(false);
+            setIsError(e.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // In order to gain access to the child component instance,
     // you need to assign it to a `ref`, so we call `useRef()` to get one
-    const childRef_About = useRef();
-    const childRef_AntdSchemaTable = useRef();
+    const useRef_About = useRef();
+    const useRef_AntdSchemaTable = useRef();
+    const useRef_AntdSchemaForm = useRef();
 
-    const trigger_About = () => {
-        console.log('App->trigger_About');
-        childRef_About.current.Hello();
+    const MyEventHelloParent = () => {
+        console.log('App->MyEventHelloParent');
     };
 
-    const trigger_AntdSchemaTable = () => {
-        console.log('App->useRef->trigger_AntdSchemaTable');
-        childRef_AntdSchemaTable.current.getPacients();
+    const MyEventHelloAbout = () => {
+        console.log('App->MyEventAbout', useRef_About);
+        useRef_About.current.HelloChild();
+    };
+
+    const MyEventHelloAntdSchemaTable = () => {
+        console.log('App->MyEventHelloAntdSchemaTable', useRef_AntdSchemaTable);
+        useRef_AntdSchemaTable.current.HelloChild();
+    };
+
+    const MyEventHelloAntdSchemaForm = () => {
+        console.log('App->MyEventHelloAntdSchemaForm', useRef_AntdSchemaForm);
+        useRef_AntdSchemaForm.current.HelloChild();
+    };
+
+    const MyEventAntdSchemaTable = () => {
+        console.log('App->useRef->MyEventAntdSchemaTable', useRef_AntdSchemaTable);
+        useRef_AntdSchemaTable.current.getPacients();
+    };
+
+    const MyEventAntdSchemaForm = () => {
+        console.log('App->useRef->MyEventAntdSchemaForm', useRef_AntdSchemaForm);
+        // useRef_AntdSchemaForm.current.getPacient();
+        getPacient();
     };
 
     return (
         <>
             <MainCard title="Escopo">
-                <About ref={childRef_About} />
-                <button onClick={() => trigger_About()}>trigger "Hello()" from Parent 2 Child</button>
+                {component_relations && <button onClick={() => MyEventHelloAbout(props)}>trigger "Hello()" from Parent 2 Child</button>}
+
+                <CompoentAbout ref={useRef_About} MyEventHelloParent={MyEventHelloParent}>
+                    {/* <SimpleSnackbar /> */}
+                </CompoentAbout>
             </MainCard>
             <MainCard title="Grade de Dados">
-                <AntdSchemaTable ref={childRef_AntdSchemaTable} />
-                <button onClick={() => trigger_AntdSchemaTable()}>Atualizar</button>
+                {/* <button onClick={() => MyEventAntdSchemaTable()}>Atualizar</button> */}
+                {component_relations && (
+                    <button onClick={() => MyEventHelloAntdSchemaTable(props)}>trigger "Hello()" from Parent 2 Child</button>
+                )}
+                <CompoentAntdSchemaTable
+                    ref={useRef_AntdSchemaTable}
+                    MyEventHelloParent={MyEventHelloParent}
+                    MyEventAntdSchemaTable={MyEventAntdSchemaTable}
+                    MyEventAntdSchemaForm={MyEventAntdSchemaForm}
+                >
+                    {/* <SimpleSnackbar /> */}
+                </CompoentAntdSchemaTable>
             </MainCard>
-            <MainCard title="Formulário">{data && <AntdSchemaForm value={data} />}</MainCard>
+            <MainCard title="Formulário">
+                {component_relations && (
+                    <button onClick={() => MyEventHelloAntdSchemaForm(props)}>trigger "Hello()" from Parent 2 Child</button>
+                )}
+
+                {data && (
+                    <CompoentAntdSchemaForm
+                        value={data}
+                        ref={useRef_AntdSchemaForm}
+                        MyEventHelloParent={MyEventHelloParent}
+                        MyEventAntdSchemaTable={MyEventAntdSchemaTable}
+                    >
+                        {/* <SimpleSnackbar /> */}
+                    </CompoentAntdSchemaForm>
+                )}
+            </MainCard>
         </>
     );
 };
 
-export default App;
+export default CompoentApp;
