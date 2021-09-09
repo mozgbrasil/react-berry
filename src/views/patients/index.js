@@ -3,6 +3,26 @@
 // #
 // #
 
+export function About(props) {
+    const { kind, ...other } = props;
+
+    return (
+        <>
+            <Typography variant="body2">
+                <a href="https://github.com/mozgbrasil/node-labs/blob/develop/views/tests/findup/scope/README_findup.md#findup">
+                    https://github.com/mozgbrasil/node-labs/blob/develop/views/tests/findup/scope/README_findup.md#findup
+                </a>
+            </Typography>
+            {/* <SimpleSnackbar /> */}
+        </>
+    );
+}
+
+// #
+// #
+// #
+// #
+
 // https://material-ui.com/pt/components/dialogs/
 
 // import React from 'react';
@@ -41,7 +61,7 @@ export function AlertDialog(props) {
         console.log('handleOk: ', key);
         await deleteUser(key);
         handleClose();
-        window.location.reload(true); // @TODO: parent datagrid request load
+        // window.location.reload(true); // @TODO: parent datagrid request load
         // toast.warning('User deleted successfully!');
     };
 
@@ -56,19 +76,19 @@ export function AlertDialog(props) {
         const results = await fetch(url, { method: 'DELETE' })
             .then((res) => {
                 var results = res;
-                console.log('results: ', results);
+                console.log('deleteUser: ', results);
                 return results;
             })
             .then((res) => {
                 var results = res.results;
-                console.log('results: ', results);
+                console.log('deleteUser: ', results);
                 return results;
             })
             .catch((e) => {
                 console.log('err: ', e.message);
             });
 
-        console.log('results: ', results);
+        console.log('deleteUser: ', results);
 
         //  setData(results);
     };
@@ -161,71 +181,85 @@ import 'antd/dist/antd.css'; // or 'antd/dist/antd.less'
 import { Table, Space, Tag, Input, Switch } from 'antd';
 import { SettingFilled as IconSettingFilled } from '@ant-design/icons';
 
-export function AntdSchemaTable(props) {
-    const { ...other } = props;
+// export function AntdSchemaTable(props) {
+//   const { ...other } = props;
+
+// We need to wrap component in `forwardRef` in order to gain
+// access to the ref object that is assigned using the `ref` prop.
+// This ref is passed as the second parameter to the function component.
+const AntdSchemaTable = forwardRef((props, ref) => {
+    const [state, setState] = useState(0);
+
+    // The component instance will be extended
+    // with whatever you return from the callback passed
+    // as the second argument
+    useImperativeHandle(ref, () => ({
+        getPacients
+    }));
 
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
 
     useEffect(() => {
-        const getPacients = async () => {
-            //
-            // setIsLoading(false);
-            //
-            try {
-                setIsLoading(true);
-                if (process.env.NODE_ENV == 'development') {
-                    var API_URL = process.env.REACT_APP_API_URL_LOCAL;
-                } else {
-                    var API_URL = process.env.REACT_APP_API_URL_WEB;
-                }
-                let url = API_URL + '/users?page=1&pageSize=50';
-                // const response = await fetch(url);
-                // const res = await response.json();
-                // const results = res.results;
-                const results = await fetch(url)
-                    .then(async (res) => {
-                        var results = await res.json();
-                        console.log('results: ', results);
-                        return results;
-                    })
-                    .then((res) => {
-                        var results = res.results;
-
-                        // Fix: Warning: Each child in a list should have a unique "key" prop.
-                        var results = results.map((obj) => {
-                            obj.key = obj._id; // on object create new key name. Assign old value to this
-                            delete obj._id; //delete object with old key name
-                            return obj;
-                        });
-
-                        // Fix: obj to arr
-                        var results = results.map((obj) => {
-                            // console.log(obj);
-                            return obj;
-                        });
-
-                        // console.log(results);
-
-                        return results;
-                    })
-                    .catch((e) => {
-                        setIsError(e.message);
-                    });
-
-                console.log('results: ', results);
-
-                setData(results);
-            } catch (e) {
-                setIsLoading(false);
-                setIsError(e.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         getPacients();
     }, []);
+
+    const getPacients = async () => {
+        //
+        // setIsLoading(false);
+        //
+        try {
+            setIsLoading(true);
+            if (process.env.NODE_ENV == 'development') {
+                var API_URL = process.env.REACT_APP_API_URL_LOCAL;
+            } else {
+                var API_URL = process.env.REACT_APP_API_URL_WEB;
+            }
+            let url = API_URL + '/users?page=1&pageSize=50';
+            // const response = await fetch(url);
+            // const res = await response.json();
+            // const results = res.results;
+            const results = await fetch(url)
+                .then(async (res) => {
+                    var results = await res.json();
+                    console.log('getPacients: ', results);
+                    return results;
+                })
+                .then((res) => {
+                    var results = res.results;
+
+                    // Fix: Warning: Each child in a list should have a unique "key" prop.
+                    var results = results.map((obj) => {
+                        obj.key = obj._id; // on object create new key name. Assign old value to this
+                        delete obj._id; //delete object with old key name
+                        return obj;
+                    });
+
+                    // Fix: obj to arr
+                    var results = results.map((obj) => {
+                        // console.log(obj);
+                        return obj;
+                    });
+
+                    // console.log('getPacients: ', results);
+
+                    return results;
+                })
+                .catch((e) => {
+                    setIsError(e.message);
+                });
+
+            console.log('getPacients: ', results);
+
+            setData(results);
+        } catch (e) {
+            setIsLoading(false);
+            setIsError(e.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const columns = [
         {
@@ -408,6 +442,7 @@ export function AntdSchemaTable(props) {
 
     const handleEdit = async (id) => {
         console.log('handleEdit: ', id);
+        // @TODO - Dispatch Main
         window.location.href = '#' + id;
         window.location.reload(true);
     };
@@ -468,7 +503,7 @@ export function AntdSchemaTable(props) {
             )} */}
         </>
     );
-}
+});
 
 // #
 // #
@@ -524,13 +559,6 @@ export function AntdSchemaForm(props) {
                 type: 'string',
                 title: 'Nat',
                 description: '2',
-                $required: true
-            },
-            cel: {
-                id: '$root/properties/cel',
-                type: 'string',
-                title: 'Cel',
-                description: 'Please type in your Cel.',
                 $required: true
             },
             phone: {
@@ -789,37 +817,7 @@ export function AntdSchemaForm(props) {
     };
 
     const value = {
-        $root: {
-            string: {
-                default: 'abcdefg',
-                cel: '12345',
-                phone: '12345'
-            },
-            number: {
-                default: 12345,
-                cel: 12345,
-                phone: 12345
-            },
-            array: {
-                default: [
-                    {
-                        col1: '数据1',
-                        col2: 1,
-                        col3: true
-                    },
-                    {
-                        col1: '数据2',
-                        col2: 2,
-                        col3: false
-                    },
-                    {
-                        cel: '数据1',
-                        phone: 1,
-                        col3: true
-                    }
-                ]
-            }
-        }
+        $root: props.value
     };
 
     const handleOkSubmit = async (form, val, keys) => {
@@ -835,12 +833,18 @@ export function AntdSchemaForm(props) {
             var API_URL = process.env.REACT_APP_API_URL_WEB;
         }
         var url = API_URL + '/users/';
-        if (1 == 2) {
-            var url = url + key;
+
+        if (window.location.hash != '') {
+            var method = 'PUT';
+            var url = url + window.location.hash.substring(1);
+        } else {
+            var method = 'POST';
         }
+
         console.log(`url: ${url}`);
+
         const results = await fetch(url, {
-            method: 'POST',
+            method: method,
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
@@ -849,19 +853,19 @@ export function AntdSchemaForm(props) {
         })
             .then((res) => {
                 var results = res;
-                console.log('results: ', results);
+                console.log('handleOkSubmit: ', results);
                 return results;
             })
             .then((res) => {
-                var results = res.results;
-                console.log('results: ', results);
+                var results = res;
+                console.log('handleOkSubmit: ', results);
                 return results;
             })
             .catch((e) => {
                 console.log('err: ', e.message);
             });
 
-        console.log('results: ', results);
+        console.log('handleOkSubmit: ', results);
     };
 
     const handleCancelClick = () => {
@@ -904,7 +908,52 @@ export function AntdSchemaForm(props) {
 // #
 // #
 
-import React, { useRef, useState, useEffect } from 'react';
+// We need to wrap component in `forwardRef` in order to gain
+// access to the ref object that is assigned using the `ref` prop.
+// This ref is passed as the second parameter to the function component.
+const Child = forwardRef((props, ref) => {
+    const [state, setState] = useState(0);
+
+    const getAlert = () => {
+        alert('getAlert from Child');
+        setState((state) => state + 1);
+    };
+
+    // The component instance will be extended
+    // with whatever you return from the callback passed
+    // as the second argument
+    useImperativeHandle(ref, () => ({
+        getAlert
+    }));
+
+    return (
+        <>
+            <h1>Count {state}</h1>
+            <button onClick={() => getAlert()}>Click Child</button>
+            <br />
+        </>
+    );
+});
+
+export const Parent = () => {
+    // In order to gain access to the child component instance,
+    // you need to assign it to a `ref`, so we call `useRef()` to get one
+    const childRef = useRef();
+
+    return (
+        <div>
+            <Child ref={childRef} />
+            <button onClick={() => childRef.current.getAlert()}>Click Parent</button>
+        </div>
+    );
+};
+
+// #
+// #
+// #
+// #
+
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 
 // material-ui
 import { Typography } from '@material-ui/core';
@@ -915,25 +964,69 @@ import MainCard from '../../ui-component/cards/MainCard';
 //==============================|| App PAGE ||==============================//
 
 const App = () => {
-    console.log('window.location.hash: ', window.location.hash);
-    console.log('process.env: ', process.env);
+    // console.log('process.env: ', process.env);
+
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isError, setIsError] = useState(false);
+
+    useEffect(() => {
+        const getPacient = async () => {
+            try {
+                setIsLoading(true);
+                if (process.env.NODE_ENV == 'development') {
+                    var API_URL = process.env.REACT_APP_API_URL_LOCAL;
+                } else {
+                    var API_URL = process.env.REACT_APP_API_URL_WEB;
+                }
+                let url = API_URL + '/users/' + window.location.hash.substring(1);
+                const results = await fetch(url)
+                    .then(async (res) => {
+                        var results = await res.json();
+                        console.log('getPacient: ', results);
+                        return results;
+                    })
+                    .then((res) => {
+                        var results = res;
+                        return results;
+                    })
+                    .catch((e) => {
+                        setIsError(e.message);
+                    });
+                console.log('getPacient: ', results);
+                setData(results);
+            } catch (e) {
+                setIsLoading(false);
+                setIsError(e.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        if (window.location.hash != '') {
+            getPacient();
+        }
+    }, []);
+
+    // In order to gain access to the child component instance,
+    // you need to assign it to a `ref`, so we call `useRef()` to get one
+    const childRef = useRef();
+
+    const getPacients = () => {
+        console.log('App->useRef->getPacient');
+        childRef.current.getPacients();
+    };
 
     return (
         <>
             <MainCard title="Escopo">
-                <Typography variant="body2">
-                    <a href="https://github.com/mozgbrasil/node-labs/blob/develop/README_findup.md#findup">
-                        https://github.com/mozgbrasil/node-labs/blob/develop/README_findup.md#findup
-                    </a>
-                </Typography>
-                <SimpleSnackbar />
+                <About />
+                <Parent />
             </MainCard>
             <MainCard title="Grade de Dados">
-                <AntdSchemaTable />
+                <AntdSchemaTable ref={childRef} />
+                <button onClick={() => getPacients()}>Atualizar</button>
             </MainCard>
-            <MainCard title="Formulário">
-                <AntdSchemaForm />
-            </MainCard>
+            <MainCard title="Formulário">{data && <AntdSchemaForm value={data} />}</MainCard>
         </>
     );
 };
