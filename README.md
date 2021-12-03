@@ -2,7 +2,7 @@
 
 ![valid XHTML][checkmark]
 
-# react-coreui
+# react-coreui 👉️
 
 ## Contribuição
 
